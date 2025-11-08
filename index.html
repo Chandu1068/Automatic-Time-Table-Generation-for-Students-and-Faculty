@@ -1,0 +1,934 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>College Timetable Generator</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f4f7f6;
+            color: #333;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: #fff;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        h1, h2, h3, h4 {
+            color: #2c3e50;
+            margin-bottom: 1rem;
+        }
+
+        h1, h2 {
+            text-align: center;
+        }
+        
+        h4 {
+            margin-top: 1.5rem;
+            border-bottom: 2px solid #ecf0f1;
+            padding-bottom: 0.5rem;
+        }
+
+        .step-navigation {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .nav-item {
+            padding: 10px 20px;
+            border-radius: 5px;
+            background-color: #ecf0f1;
+            color: #7f8c8d;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        .nav-item.active {
+            background-color: #3498db;
+            color: white;
+        }
+        
+        .nav-item.clickable {
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        
+        .nav-item.clickable:hover {
+            background-color: #bdc3c7;
+        }
+
+        .step-container {
+            margin-bottom: 2rem;
+            padding: 1.5rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 5px;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        form {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .form-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 1rem;
+        }
+
+        .year-group {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+        }
+
+        label {
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: #34495e;
+        }
+
+        input[type="text"],
+        input[type="number"],
+        textarea,
+        select {
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 1rem;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        textarea {
+            resize: vertical;
+        }
+
+        button {
+            padding: 12px 20px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: background-color 0.3s ease;
+        }
+        
+        button:disabled {
+            background-color: #bdc3c7;
+            cursor: not-allowed;
+        }
+        
+        button.secondary {
+             background-color: #95a5a6;
+        }
+
+        button:hover {
+            background-color: #2980b9;
+        }
+        
+        button.secondary:hover {
+            background-color: #7f8c8d;
+        }
+
+        .cta-button {
+            width: 100%;
+            padding: 15px;
+            font-size: 1.2rem;
+            margin-top: 1rem;
+            background-color: #27ae60;
+        }
+
+        .cta-button:hover {
+            background-color: #229954;
+        }
+
+        .section-allocation-block {
+            margin-bottom: 2rem;
+            padding: 1rem;
+            border: 1px solid #bdc3c7;
+            border-radius: 5px;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .period-counter {
+            font-size: 1rem;
+            font-weight: bold;
+            padding: 5px 10px;
+            border-radius: 5px;
+            background-color: #ecf0f1;
+        }
+
+        .period-counter.correct {
+            background-color: #2ecc71;
+            color: white;
+        }
+
+        .period-counter.incorrect {
+            background-color: #e74c3c;
+            color: white;
+        }
+
+        .allocation-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+            overflow-x: auto;
+            display: block;
+        }
+
+        .allocation-table th, .allocation-table td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+
+        .allocation-table th {
+            background-color: #ecf0f1;
+        }
+
+        .allocation-table select, .allocation-table input {
+            width: 100%;
+            min-width: 120px;
+            padding: 5px;
+        }
+
+        .timetable {
+            margin-bottom: 3rem;
+            overflow-x: auto;
+        }
+
+        .timetable-grid {
+            width: 100%;
+            border-collapse: collapse;
+            table-layout: fixed;
+            min-width: 800px;
+        }
+
+        .timetable-grid th, .timetable-grid td {
+            border: 1px solid #95a5a6;
+            padding: 8px;
+            text-align: center;
+            height: 60px;
+            font-size: 0.85rem;
+        }
+
+        .timetable-grid th {
+            background-color: #34495e;
+            color: white;
+        }
+
+        .timetable-grid .period-time {
+            font-size: 0.75rem;
+            font-weight: normal;
+            color: #ccc;
+        }
+
+        .timetable-grid .day-header {
+            background-color: #2c3e50;
+        }
+
+        .timetable-grid .period-header {
+            font-weight: bold;
+        }
+
+        .timetable-grid td span {
+            display: block;
+            font-weight: bold;
+        }
+
+        .timetable-grid td .faculty, .timetable-grid td .section-name {
+            font-size: 0.75rem;
+            color: #555;
+            font-style: italic;
+        }
+
+        .break {
+            background-color: #ecf0f1;
+            font-style: italic;
+            font-weight: bold;
+            color: #7f8c8d;
+        }
+        
+        .workload {
+            text-align: right;
+            font-weight: bold;
+            margin-top: 1rem;
+        }
+
+        .output-actions {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin-top: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .output-actions button {
+            align-self: center;
+            width: 150px;
+        }
+
+        #regenerate-btn-output {
+            background-color: #f39c12;
+        }
+
+        #regenerate-btn-output:hover {
+            background-color: #d35400;
+        }
+        
+        #print-btn {
+            background-color: #16a085;
+        }
+
+        #print-btn:hover {
+            background-color: #1abc9c;
+        }
+
+        .error {
+            background-color: #e74c3c;
+            color: white;
+            padding: 1rem;
+            border-radius: 5px;
+            text-align: center;
+            margin-top: 1rem;
+        }
+
+        @media print {
+            body {
+                padding: 0;
+                margin: 0;
+                background-color: #fff;
+            }
+
+            .container > *:not(#output-container),
+            .step-navigation,
+            .output-actions,
+            #error-message {
+                display: none !important;
+            }
+            
+            #output-container {
+                 display: block !important;
+            }
+
+            .container, #output-container, #timetables-wrapper {
+                padding: 0 !important;
+                margin: 0 !important;
+                box-shadow: none !important;
+                border: none !important;
+            }
+
+            .timetable {
+                page-break-inside: avoid;
+                margin-bottom: 2rem;
+            }
+            
+            .timetable-grid {
+                font-size: 9pt;
+                min-width: 100%;
+            }
+
+            .timetable-grid th, .timetable-grid td {
+                padding: 4px;
+                height: auto;
+            }
+            
+            .break {
+                background-color: #f0f0f0 !important;
+                color: #666 !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+
+            h2, h4 {
+               text-align: center;
+               margin-top: 1.5rem;
+               border-bottom: 1px solid #ccc;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>College Timetable Generator</h1>
+        
+        <div class="step-navigation">
+            <div id="nav-step1" class="nav-item">Step 1: Setup</div>
+            <div id="nav-step2" class="nav-item">Step 2: Details</div>
+            <div id="nav-step3" class="nav-item">Step 3: Allocation</div>
+            <div id="nav-step4" class="nav-item">Step 4: View Timetable</div>
+        </div>
+
+        <div id="step1" class="step-container">
+            <h2>Step 1: Basic Information</h2>
+            <form id="counts-form">
+                <h4>Number of Sections per Year</h4>
+                <div class="year-group">
+                    <div class="form-group">
+                        <label for="year-2-sections">2nd Year Sections:</label>
+                        <input type="number" id="year-2-sections" min="0" value="0" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="year-3-sections">3rd Year Sections:</label>
+                        <input type="number" id="year-3-sections" min="0" value="0" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="year-4-sections">4th Year Sections:</label>
+                        <input type="number" id="year-4-sections" min="0" value="0" required>
+                    </div>
+                </div>
+                <h4>Number of Subjects per Year</h4>
+                <div class="year-group">
+                    <div class="form-group">
+                        <label for="year-2-theories">2nd Year Theories:</label>
+                        <input type="number" id="year-2-theories" min="0" value="0" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="year-3-theories">3rd Year Theories:</label>
+                        <input type="number" id="year-3-theories" min="0" value="0" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="year-4-theories">4th Year Theories:</label>
+                        <input type="number" id="year-4-theories" min="0" value="0" required>
+                    </div>
+                </div>
+                <div class="year-group">
+                    <div class="form-group">
+                        <label for="year-2-labs">2nd Year Labs:</label>
+                        <input type="number" id="year-2-labs" min="0" value="0" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="year-3-labs">3rd Year Labs:</label>
+                        <input type="number" id="year-3-labs" min="0" value="0" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="year-4-labs">4th Year Labs:</label>
+                        <input type="number" id="year-4-labs" min="0" value="0" required>
+                    </div>
+                </div>
+                <div class="form-actions">
+                    <span></span> <button type="submit">Next Step</button>
+                </div>
+            </form>
+        </div>
+
+        <div id="step2" class="step-container hidden">
+            <h2>Step 2: Detailed Information</h2>
+            <form id="names-form">
+                <div id="subject-names-container"></div>
+                <div id="faculty-names-container">
+                    <label>Faculty Members (one per line):</label>
+                    <textarea id="faculty-names" rows="5" placeholder="Prof. Smith&#10;Dr. Jones"></textarea>
+                </div>
+                <div id="section-names-container"></div>
+                <div class="form-actions">
+                    <button type="button" class="secondary" id="back-to-step1">Go Back</button>
+                    <button type="submit">Next Step</button>
+                </div>
+            </form>
+        </div>
+
+        <div id="step3" class="step-container hidden">
+            <h2>Step 3: Subject & Faculty Allocation</h2>
+            <p>For each section, add subjects until the total period count reaches 42.</p>
+            <div id="allocation-container"></div>
+            <div class="form-actions">
+               <button type="button" class="secondary" id="back-to-step2">Go Back</button>
+               <span></span> </div>
+            <button id="generate-btn" class="cta-button">Generate Timetable</button>
+        </div>
+
+        <div id="output-container" class="step-container hidden">
+            <div id="timetables-wrapper"></div>
+            <div class="output-actions">
+                <button id="regenerate-btn-output">Regenerate</button>
+                <button id="print-btn">Print</button>
+                <button onclick="location.reload()">Start Over</button>
+            </div>
+        </div>
+        
+        <div id="error-message" class="error hidden"></div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // --- STATE MANAGEMENT ---
+            const state = {
+                counts: { sections: {}, subjects: {} },
+                names: { theories: [], labs: [], faculty: [], sections: [], },
+                allocations: {},
+            };
+
+            // --- DOM ELEMENTS ---
+            const steps = { step1: document.getElementById('step1'), step2: document.getElementById('step2'), step3: document.getElementById('step3'), output: document.getElementById('output-container'), };
+            const forms = { countsForm: document.getElementById('counts-form'), namesForm: document.getElementById('names-form'), };
+            const containers = {
+                subjectNames: document.getElementById('subject-names-container'),
+                sectionNames: document.getElementById('section-names-container'),
+                facultyNames: document.getElementById('faculty-names'),
+                allocation: document.getElementById('allocation-container'),
+                timetables: document.getElementById('timetables-wrapper'),
+            };
+            const generateBtn = document.getElementById('generate-btn');
+            const regenerateBtn = document.getElementById('regenerate-btn-output');
+            const printBtn = document.getElementById('print-btn');
+            const errorDiv = document.getElementById('error-message');
+            const navItems = {
+                1: document.getElementById('nav-step1'),
+                2: document.getElementById('nav-step2'),
+                3: document.getElementById('nav-step3'),
+                4: document.getElementById('nav-step4'),
+            };
+            
+            // --- CONSTANTS ---
+            const YEARS = [2, 3, 4];
+            const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+            const PERIODS_PER_DAY = 7;
+            const TOTAL_PERIODS = DAYS.length * PERIODS_PER_DAY;
+            const PERIOD_TIMES = ["09:00-09:55", "09:55-10:50", "11:05-11:55", "11:55-12:45", "01:40-02:30", "02:30-03:20", "03:20-04:10"];
+            const FACULTY_TO_EXCLUDE = ["Library Staff", "Sports Instructor", "Counselor"];
+            const LUNCH_BREAK_PERIOD_INDEX = 4; // Period 5 (index 4) is after lunch
+
+            // --- EVENT LISTENERS ---
+            forms.countsForm.addEventListener('submit', handleCountsSubmit);
+            forms.namesForm.addEventListener('submit', handleNamesSubmit);
+            generateBtn.addEventListener('click', handleGenerateClick);
+            regenerateBtn.addEventListener('click', handleRegenerateClick);
+            printBtn.addEventListener('click', () => window.print());
+            containers.allocation.addEventListener('click', handleAllocationClick);
+            containers.allocation.addEventListener('input', handleAllocationInput);
+            document.getElementById('back-to-step1').addEventListener('click', () => goToStep(1));
+            document.getElementById('back-to-step2').addEventListener('click', () => goToStep(2));
+
+            // --- EVENT HANDLERS ---
+            function handleCountsSubmit(e) {
+                e.preventDefault();
+                YEARS.forEach(year => {
+                    state.counts.sections[year] = parseInt(document.getElementById(`year-${year}-sections`).value, 10) || 0;
+                    state.counts.subjects[year] = {
+                        theories: parseInt(document.getElementById(`year-${year}-theories`).value, 10) || 0,
+                        labs: parseInt(document.getElementById(`year-${year}-labs`).value, 10) || 0,
+                    };
+                });
+                createNameInputs();
+                goToStep(2);
+            }
+
+            function handleNamesSubmit(e) {
+                e.preventDefault();
+                state.names.theories = [];
+                state.names.labs = [];
+                state.names.sections = [];
+                YEARS.forEach(year => {
+                    document.querySelectorAll(`.theory-name-year-${year}`).forEach(input => {
+                        const name = input.value.trim();
+                        if (name) state.names.theories.push({ name, year });
+                    });
+                    document.querySelectorAll(`.lab-name-year-${year}`).forEach(input => {
+                        const name = input.value.trim();
+                        if (name) state.names.labs.push({ name, year });
+                    });
+                    document.querySelectorAll(`.section-name-year-${year}`).forEach(input => {
+                        const name = input.value.trim();
+                        if (name) {
+                            const uid = `year${year}_section${name.replace(/\s+/g, '-')}`;
+                            state.names.sections.push({ name, year, uid });
+                        }
+                    });
+                });
+                state.names.faculty = containers.facultyNames.value.split('\n').map(name => name.trim()).filter(Boolean);
+                const specialSubjects = [{ name: "Sports", year: 'all' }, { name: "Library", year: 'all' }, { name: "Counseling", year: 'all' }];
+                specialSubjects.forEach(specialSub => {
+                    if (!state.names.theories.find(s => s.name === specialSub.name)) state.names.theories.push(specialSub);
+                });
+                FACULTY_TO_EXCLUDE.forEach(f => {
+                    if (!state.names.faculty.includes(f)) state.names.faculty.push(f);
+                });
+                createAllocationInterface();
+                goToStep(3);
+            }
+            
+            function handleGenerateClick() {
+                if (!captureAndValidateAllocations()) return;
+                runGeneratorWithRetries();
+            }
+
+            function handleRegenerateClick() {
+                 runGeneratorWithRetries();
+            }
+
+            // --- UI GENERATION ---
+            function createNameInputs() {
+                let subjectHtml = '';
+                let sectionHtml = '';
+                YEARS.forEach(year => {
+                    const yearSubjects = state.counts.subjects[year];
+                    const yearSections = state.counts.sections[year];
+                    if (yearSubjects && yearSubjects.theories > 0) {
+                        subjectHtml += `<h4>${year} Year Theory Subjects</h4>`;
+                        for (let i = 0; i < yearSubjects.theories; i++) subjectHtml += `<input type="text" class="theory-name-year-${year}" placeholder="${year} Year - Theory Subject ${i + 1}" required>`;
+                    }
+                    if (yearSubjects && yearSubjects.labs > 0) {
+                        subjectHtml += `<h4>${year} Year Lab Subjects</h4>`;
+                        for (let i = 0; i < yearSubjects.labs; i++) subjectHtml += `<input type="text" class="lab-name-year-${year}" placeholder="${year} Year - Lab Subject ${i + 1}" required>`;
+                    }
+                    if (yearSections > 0) {
+                        sectionHtml += `<h4>${year} Year Sections</h4>`;
+                        for (let i = 0; i < yearSections; i++) sectionHtml += `<input type="text" class="section-name-year-${year}" placeholder="${year} Year - Section ${String.fromCharCode(65 + i)}" required>`;
+                    }
+                });
+                containers.subjectNames.innerHTML = subjectHtml;
+                containers.sectionNames.innerHTML = sectionHtml;
+            }
+            
+            function createAllocationInterface() {
+                let allocationHtml = '';
+                state.names.sections.forEach(({ name, year, uid }) => {
+                    allocationHtml += `
+                        <div class="section-allocation-block" data-section-uid="${uid}">
+                             <div class="section-header">
+                                 <h4>Section: ${name} (${year} Year)</h4>
+                                 <span class="period-counter" id="counter-${uid}"><span id="count-${uid}">0</span> / ${TOTAL_PERIODS}</span>
+                             </div>
+                            <table class="allocation-table" id="table-${uid}">
+                                 <thead><tr><th>Subject</th><th>Faculty</th><th>Classes/Week</th><th>Consecutive</th><th>Action</th></tr></thead>
+                                 <tbody></tbody>
+                             </table>
+                             <button type="button" class="add-row-btn" data-section-uid="${uid}" data-year="${year}">+ Add Subject</button>
+                         </div>
+                    `;
+                });
+                containers.allocation.innerHTML = allocationHtml;
+            }
+
+            function addAllocationRow(sectionUid, year) {
+                const tableBody = document.querySelector(`#table-${sectionUid} tbody`);
+                const newRow = tableBody.insertRow();
+                const yearTheories = state.names.theories.filter(s => s.year === year || s.year === 'all');
+                const yearLabs = state.names.labs.filter(l => l.year === year);
+                const subjectOptions = [...yearTheories, ...yearLabs].map(s => `<option value="${s.name}">${s.name}</option>`).join('');
+                const facultyOptions = state.names.faculty.map(f => `<option value="${f}">${f}</option>`).join('');
+                newRow.innerHTML = `<td><select class="subject-select">${subjectOptions}</select></td><td><select class="faculty-select">${facultyOptions}</select></td><td><input type="number" class="periods-input" min="1" value="1"></td><td><input type="number" class="consecutive-input" min="1" max="4" value="1"></td><td><button type="button" class="delete-row-btn">Remove</button></td>`;
+            }
+
+            function handleAllocationClick(e) {
+                if (e.target.classList.contains('add-row-btn')) {
+                    const sectionUid = e.target.dataset.sectionUid;
+                    const year = parseInt(e.target.dataset.year, 10);
+                    addAllocationRow(sectionUid, year);
+                    updatePeriodCount(sectionUid);
+                }
+                if (e.target.classList.contains('delete-row-btn')) {
+                    const sectionUid = e.target.closest('.section-allocation-block').dataset.sectionUid;
+                    e.target.closest('tr').remove();
+                    updatePeriodCount(sectionUid);
+                }
+            }
+            
+            function handleAllocationInput(e) {
+                if (e.target.classList.contains('periods-input') || e.target.classList.contains('consecutive-input')) {
+                    const sectionUid = e.target.closest('.section-allocation-block').dataset.sectionUid;
+                    updatePeriodCount(sectionUid);
+                }
+            }
+
+            // --- CORE LOGIC ---
+            function updatePeriodCount(sectionUid) {
+                let sum = 0;
+                document.querySelectorAll(`#table-${sectionUid} tbody tr`).forEach(row => {
+                    const classes = parseInt(row.querySelector('.periods-input').value, 10) || 0;
+                    const consecutive = parseInt(row.querySelector('.consecutive-input').value, 10) || 1;
+                    sum += classes * consecutive;
+                });
+                document.getElementById(`count-${sectionUid}`).textContent = sum;
+                const counterEl = document.getElementById(`counter-${sectionUid}`);
+                counterEl.classList.remove('correct', 'incorrect');
+                if (sum === TOTAL_PERIODS) counterEl.classList.add('correct');
+                else counterEl.classList.add('incorrect');
+            }
+
+            function captureAndValidateAllocations() {
+                hideError();
+                let allSectionsValid = true;
+                state.names.sections.forEach(({ name, uid }) => {
+                    state.allocations[uid] = [];
+                    let totalPeriods = 0;
+                    document.querySelectorAll(`#table-${uid} tbody tr`).forEach(row => {
+                        const subject = row.querySelector('.subject-select').value;
+                        const blocks = parseInt(row.querySelector('.periods-input').value, 10) || 0;
+                        const consecutive = parseInt(row.querySelector('.consecutive-input').value, 10) || 1;
+                         if (subject === 'Sports' && (blocks !== 1 || (consecutive !== 1 && consecutive !== 2))) {
+                             showError("Rule Violation: 'Sports' must be 1 class/week with 1 or 2 consecutive periods.");
+                             allSectionsValid = false;
+                         }
+                        if (blocks > 0) state.allocations[uid].push({ subject, faculty: row.querySelector('.faculty-select').value, blocks, consecutive });
+                        totalPeriods += blocks * consecutive;
+                    });
+                    if (!allSectionsValid) return;
+                    if (totalPeriods !== TOTAL_PERIODS) {
+                        showError(`Error in Section '${name}': Total periods must be ${TOTAL_PERIODS}. Current is ${totalPeriods}.`);
+                        allSectionsValid = false;
+                    }
+                });
+                return allSectionsValid;
+            }
+
+            // --- Iterative Timetable Generation ---
+            function runGeneratorWithRetries() {
+                hideError();
+                const btn = document.getElementById('generate-btn');
+                btn.disabled = true;
+                btn.textContent = 'Generating... Please Wait';
+
+                // Use a timeout to allow the UI to update before starting the heavy computation
+                setTimeout(() => {
+                    let result = null;
+                    // Try multiple times to find a solution
+                    for (let i = 0; i < 500; i++) { // Increased attempts for complex schedules
+                        result = generateTimetables();
+                        if (result.success) break;
+                    }
+                    
+                    if (result && result.success) {
+                        displayAllTimetables(result.timetables);
+                        goToStep(4);
+                    } else {
+                        showError((result ? result.message : "Failed to generate timetable.") + " The schedule is highly constrained. Please check allocations or try again.");
+                    }
+
+                    btn.disabled = false;
+                    btn.textContent = 'Generate Timetable';
+                }, 10);
+            }
+
+            function generateTimetables() {
+                let timetables = {};
+                let facultySchedules = {};
+                let labSubjectSchedules = {};
+
+                const allLabNames = state.names.labs.map(l => l.name);
+                state.names.sections.forEach(({ uid }) => timetables[uid] = Array(DAYS.length).fill(0).map(() => Array(PERIODS_PER_DAY).fill(null)));
+                state.names.faculty.forEach(f => facultySchedules[f] = Array(DAYS.length).fill(0).map(() => Array(PERIODS_PER_DAY).fill(false)));
+                allLabNames.forEach(l => { if(l) labSubjectSchedules[l] = Array(DAYS.length).fill(0).map(() => Array(PERIODS_PER_DAY).fill(false))});
+
+                let tasks = [];
+                for (const sectionUid in state.allocations) {
+                    state.allocations[sectionUid].forEach(alloc => {
+                        const isLab = allLabNames.includes(alloc.subject);
+                        for (let i = 0; i < alloc.blocks; i++) tasks.push({ section: sectionUid, ...alloc, isLab });
+                    });
+                }
+                
+                tasks.sort((a, b) => {
+                    if (a.isLab && !b.isLab) return -1;
+                    if (!a.isLab && b.isLab) return 1;
+                    return b.consecutive - a.consecutive;
+                });
+                
+                for (const task of tasks) {
+                    if (!placeTaskInSchedule(task, timetables, facultySchedules, labSubjectSchedules)) {
+                        return { 
+                            success: false, 
+                            message: `Could not place ${task.isLab ? 'LAB' : 'THEORY'} '${task.subject}' for section ${state.names.sections.find(s => s.uid === task.section).name}.` 
+                        };
+                    }
+                }
+                
+                return { success: true, timetables };
+            }
+
+            function placeTaskInSchedule(task, timetables, facultySchedules, labSubjectSchedules) {
+                let bestPlacement = { day: -1, period: -1, cost: Infinity };
+                
+                // Shuffle days to introduce randomness in each attempt
+                const attemptDays = [...Array(DAYS.length).keys()].sort(() => Math.random() - 0.5);
+
+                for (const dayIndex of attemptDays) {
+                    for (let periodIndex = 0; periodIndex < PERIODS_PER_DAY; periodIndex++) {
+                         const cost = calculatePlacementCost(timetables, facultySchedules, labSubjectSchedules, task, dayIndex, periodIndex);
+                         if (cost < bestPlacement.cost) {
+                             bestPlacement = { day: dayIndex, period: periodIndex, cost: cost };
+                         }
+                    }
+                }
+
+                if (bestPlacement.cost !== Infinity) {
+                    placeTask(timetables, facultySchedules, labSubjectSchedules, task, bestPlacement.day, bestPlacement.period);
+                    return true;
+                }
+                
+                return false;
+            }
+            
+            function calculatePlacementCost(timetables, facultySchedules, labSubjectSchedules, task, day, startPeriod) {
+                // --- HARD CONSTRAINTS (Return Infinity if violated) ---
+                if (startPeriod + task.consecutive > PERIODS_PER_DAY) return Infinity;
+
+                for (let i = 0; i < task.consecutive; i++) {
+                    const currentPeriod = startPeriod + i;
+                    if (timetables[task.section][day][currentPeriod] !== null) return Infinity;
+                    if (task.faculty && facultySchedules[task.faculty] && facultySchedules[task.faculty][day][currentPeriod]) return Infinity;
+                    if (task.isLab && labSubjectSchedules[task.subject] && labSubjectSchedules[task.subject][day][currentPeriod]) return Infinity;
+                }
+
+                if (task.isLab) {
+                    if (task.consecutive === 3 && ![1, 4].includes(startPeriod)) return Infinity;
+                    if (task.consecutive === 2 && ![0, 2, 5].includes(startPeriod)) return Infinity; // Adjusted for more lab slots
+                }
+
+                // --- SOFT CONSTRAINTS (Return a penalty score) ---
+                let cost = Math.random() * 0.5; // Add a small random factor to break ties
+                const faculty = task.faculty;
+
+                // Penalty for teaching before and after lunch
+                if ((startPeriod + task.consecutive - 1 === LUNCH_BREAK_PERIOD_INDEX - 1 && facultySchedules[faculty][day][LUNCH_BREAK_PERIOD_INDEX]) ||
+                    (startPeriod === LUNCH_BREAK_PERIOD_INDEX && facultySchedules[faculty][day][LUNCH_BREAK_PERIOD_INDEX - 1])) {
+                    cost += 5;
+                }
+
+                // Penalty for consecutive periods
+                let count = task.consecutive;
+                let p_before = startPeriod - 1;
+                while (p_before >= 0 && facultySchedules[faculty][day][p_before]) { count++; p_before--; }
+                
+                let p_after = startPeriod + task.consecutive;
+                while (p_after < PERIODS_PER_DAY && facultySchedules[faculty][day][p_after]) { count++; p_after++; }
+                
+                if (count === 3) cost += 1;      // Minor penalty for 3 in a row
+                if (count >= 4) cost += 10;     // High penalty for 4+ in a row
+
+                return cost;
+            }
+            
+            function placeTask(timetables, facultySchedules, labSubjectSchedules, task, day, startPeriod) {
+                for (let i = 0; i < task.consecutive; i++) {
+                    const currentPeriod = startPeriod + i;
+                    timetables[task.section][day][currentPeriod] = { subject: task.subject, faculty: task.faculty };
+                    if (task.faculty && facultySchedules[task.faculty]) facultySchedules[task.faculty][day][currentPeriod] = true;
+                    if (task.isLab && labSubjectSchedules[task.subject]) labSubjectSchedules[task.subject][day][currentPeriod] = true;
+                }
+            }
+
+            // --- DISPLAY & UTILITY ---
+            function displayAllTimetables(sectionTimetables) {
+                let outputHtml = '<h2>Section Timetables</h2>';
+                state.names.sections.forEach(({ name, year, uid }) => {
+                    outputHtml += `<div class="timetable"><h4>Timetable for Section: ${name} (${year} Year)</h4>`;
+                    outputHtml += generateTimetableGridHtml(sectionTimetables[uid]);
+                    outputHtml += `</div>`;
+                });
+                outputHtml += '<hr style="margin: 3rem 0;"><h2>Individual Faculty Timetables</h2>';
+                const facultyTimetables = {};
+                state.names.faculty.forEach(f => facultyTimetables[f] = Array(DAYS.length).fill(0).map(() => Array(PERIODS_PER_DAY).fill(null)));
+                for (const sectionUid in sectionTimetables) {
+                    const sectionInfo = state.names.sections.find(s => s.uid === sectionUid);
+                    if (!sectionInfo) continue;
+                    for (let day = 0; day < DAYS.length; day++) {
+                        for (let period = 0; period < PERIODS_PER_DAY; period++) {
+                            const cell = sectionTimetables[sectionUid][day][period];
+                            if (cell && cell.faculty && facultyTimetables[cell.faculty]) {
+                                facultyTimetables[cell.faculty][day][period] = { subject: cell.subject, section: sectionInfo.name };
+                            }
+                        }
+                    }
+                }
+                state.names.faculty.forEach(faculty => {
+                    if (FACULTY_TO_EXCLUDE.includes(faculty)) return;
+                    outputHtml += `<div class="timetable"><h4>Timetable for: ${faculty}</h4>`;
+                    outputHtml += generateTimetableGridHtml(facultyTimetables[faculty], true);
+                    let workload = Object.values(facultyTimetables[faculty]).flat().filter(Boolean).length;
+                    outputHtml += `<div class="workload">Total Workload: ${workload} Periods/Week</div>`;
+                    outputHtml += `</div>`;
+                });
+                containers.timetables.innerHTML = outputHtml;
+            }
+
+            function generateTimetableGridHtml(timetableData, isFaculty = false) {
+                let gridHtml = '<table class="timetable-grid"><thead><tr><th>Period</th>';
+                gridHtml += DAYS.map(day => `<th class="day-header">${day}</th>`).join('');
+                gridHtml += '</tr></thead><tbody>';
+                for (let i = 0; i < PERIODS_PER_DAY; i++) {
+                    gridHtml += `<tr><td class="period-header">P${i + 1}<br><span class="period-time">${PERIOD_TIMES[i]}</span></td>`;
+                    for (let j = 0; j < DAYS.length; j++) {
+                        const cell = timetableData[j][i];
+                        if (cell) {
+                            const detail = isFaculty ? cell.section : cell.faculty;
+                            const detailClass = isFaculty ? 'section-name' : 'faculty';
+                            gridHtml += `<td><span>${cell.subject}</span><span class="${detailClass}">(${detail})</span></td>`;
+                        } else {
+                            gridHtml += `<td></td>`;
+                        }
+                    }
+                    gridHtml += `</tr>`;
+                    if (i === 1 || i === 3) {
+                        gridHtml += `<tr><td colspan="${DAYS.length + 1}" class="break">${i === 1 ? 'Short Break (10:50 - 11:05)' : 'Lunch Break (12:45 - 01:40)'}</td></tr>`;
+                    }
+                }
+                gridHtml += '</tbody></table>';
+                return gridHtml;
+            }
+
+            function goToStep(stepNum) {
+                Object.values(steps).forEach((step, index) => {
+                    const navItem = navItems[index + 1];
+                    if(navItem) {
+                        navItem.classList.remove('active', 'clickable');
+                        if (index < stepNum - 1) {
+                            navItem.classList.add('clickable');
+                        } else if (index === stepNum - 1) {
+                            navItem.classList.add('active');
+                        }
+                        step.classList.toggle('hidden', index !== stepNum - 1);
+                    }
+                });
+                // Special case for the output step
+                 steps.output.classList.toggle('hidden', stepNum !== 4);
+            }
+
+            function showError(message) {
+                errorDiv.textContent = message;
+                errorDiv.classList.remove('hidden');
+            }
+
+            function hideError() {
+                errorDiv.classList.add('hidden');
+            }
+            
+            goToStep(1); // Initialize on Step 1
+        });
+    </script>
+</body>
+</html>
+
