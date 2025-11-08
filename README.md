@@ -76,15 +76,15 @@ The core of this project is the JavaScript-based scheduling engine (generateTime
 
 3)Penalty Calculation:
 
-  ->  Infinity Penalty (Hard Constraint): A slot is given an infinite penalty if it violates a hard rule (e.g., the teacher is busy, the section is busy, or it's a lab in the wrong slot).
+    ->  Infinity Penalty (Hard Constraint): A slot is given an infinite penalty if it violates a hard rule (e.g., the teacher is busy, the section is busy, or it's a lab in the wrong slot).
 
-  ->  High Penalty (Soft Constraint): A slot gets a high penalty (e.g., +10) if placing a class there creates a 4-period or 5-period block for the assigned faculty.
+    ->  High Penalty (Soft Constraint): A slot gets a high penalty (e.g., +10) if placing a class there creates a 4-period or 5-period block for the assigned faculty.
 
-  ->  Medium Penalty (Soft Constraint): A slot gets a medium penalty (e.g., +5) if it schedules the faculty right before and right after the lunch break.
+    ->  Medium Penalty (Soft Constraint): A slot gets a medium penalty (e.g., +5) if it schedules the faculty right before and right after the lunch break.
 
-  ->  Low Penalty (Soft Constraint): A slot gets a low penalty (e.g., +1) if it creates a 3-period block.
+    ->  Low Penalty (Soft Constraint): A slot gets a low penalty (e.g., +1) if it creates a 3-period block.
 
-  ->  Zero Penalty: An ideal slot that causes no issues.
+    ->  Zero Penalty: An ideal slot that causes no issues.
 
 4) Placement: The algorithm places the class in the slot with the lowest total penalty score. This ensures that it always makes the most optimal, faculty-friendly choice available.
 
